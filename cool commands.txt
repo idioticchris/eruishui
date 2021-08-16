@@ -1,0 +1,340 @@
+    case "addrole":
+      if (!message.member.hasPermission(["MANAGE_ROLES", "ADMINISTRATOR"]))
+        return message.channel.send(
+          "You dont have permission to perform this command!"
+        );
+
+      let addrMember =
+        message.mentions.members.first() ||
+        message.guild.members.find(m => m.user.tag === args[1]) ||
+        message.guild.members.get(args[1]);
+      if (!addrMember)
+        return message.channel.send("Please provide a user to add a role too.");
+      let grole =
+        message.guild.roles.find(r => r.name == args.slice(2).join(" ")) ||
+        message.guild.roles.find(r => r.id == args[2]) ||
+        message.mentions.roles.first();
+      if (!grole)
+        return message.channel.send("well uh i cant find the role sorry..");
+      let addreason = args.slice(2).join(" ");
+      if (!addreason) return message.channel.send("Please provide a reason");
+
+      if (!message.guild.me.hasPermission(["MANAGE_ROLES", "ADMINISTRATOR"]))
+        return message.channel.send(
+          "I don't have permission to perform this command."
+        );
+
+      if (addrMember.roles.has(grole.id)) {
+        return message.channel.send(
+          `${addrMember.displayName}, already has the role!`
+        );
+      } else {
+        await addrMember.addRole(grole.id).catch(e => console.log(e.message));
+        message.channel.send(`Here`);
+      }
+
+      let roleembed = new Discord.RichEmbed()
+        .setColor(colours.redlight)
+        .setAuthor(`${message.guild.name} Modlogs`, message.guild.iconURL)
+        .addField("Moderation:", "ROLES")
+        .addField("Recieved by:", addrMember.user.username)
+        .addField("Moderator:", message.author.username)
+        .addField("Given Role:", addreason)
+        .addField("Date:", message.createdAt.toLocaleString());
+
+      message.channel.send(roleembed);
+
+      break;
+
+    case "removerole":
+      if (!message.member.hasPermission(["MANAGE_ROLES", "ADMINISTRATOR"]))
+        return message.channel.send(
+          "You dont have permission to perform this command!"
+        );
+
+      let removerMember =
+        message.mentions.members.first() ||
+        message.guild.members.find(m => m.user.tag === args[1]) ||
+        message.guild.members.get(args[1]);
+      if (!removerMember)
+        return message.channel.send(
+          "Please provide a user to remove a role too."
+        );
+      let removerole =
+        message.guild.roles.find(r => r.name == args.slice(2).join(" ")) ||
+        message.guild.roles.find(r => r.id == args[2]) ||
+        message.mentions.roles.first();
+      if (!removerole)
+        return message.channel.send(
+          "Please provide a role to remove from said user."
+        );
+      let removereason = args.slice(2).join(" ");
+      if (!removereason) return message.channel.send("Please provide a reason");
+
+      if (!message.guild.me.hasPermission(["MANAGE_ROLES", "ADMINISTRATOR"]))
+        return message.channel.send(
+          "I don't have permission to perform this command."
+        );
+
+      if (!removerMember.roles.has(removerole.id)) {
+        return message.channel.send(
+          `${removerMember.displayName} doesnt have the role!`
+        );
+      } else {
+        await removerMember
+          .removeRole(removerole.id)
+          .catch(e => console.log(e.message));
+        message.channel.send(`Here`);
+      }
+
+      let removeembed = new Discord.RichEmbed()
+        .setColor(colours.redlight)
+        .setAuthor(`${message.guild.name} Modlogs`, message.guild.iconURL)
+        .addField("Moderation:", "ROLES")
+        .addField("Acted to:", removerMember.user.username)
+        .addField("Moderator:", message.author.username)
+        .addField("Removed role:", removereason)
+        .addField("Date:", message.createdAt.toLocaleString());
+
+      message.channel.send(removeembed);
+      break;
+      
+      
+    case "botinfo":
+      if (message.content.startsWith(PREFIX + "botinfo")) {
+        let author = message.author.username;
+        let boticon = bot.user.displayAvatarURL;
+        let botembed = new Discord.RichEmbed()
+
+          .setTitle("**Bot Information**")
+          .setDescription("Thank you for using my bot -deera")
+          .addField("Bot Name", bot.user.username)
+          .addField("Info", bot.user.createdAt)
+          .addField("Version", "1.2.0")
+          .addField("Servers", bot.guilds.size)
+          .addField(
+            "Server List",
+            bot.guilds.map(g => g.id + " - " + g.name),
+            
+          )
+          .setColor(0xffbf43)
+          .setThumbnail(boticon)
+          .setAuthor(author)
+          .setTimestamp();
+
+        message.channel.send(botembed);
+      }
+
+      break;
+      
+        case "mute":
+      if (message.content.startsWith(PREFIX + "mute")) {
+        if (
+          !message.member.hasPermission("MANAGE_ROLES") ||
+          !message.guild.owner
+        )
+          return message.channel.send(
+            "You dont have permission to use this command."
+          );
+
+        if (!message.guild.me.hasPermission(["ADMINISTRATOR"]))
+          return message.channel.send(
+            "I don't have permission to add the muted role to him!"
+          );
+
+        //define the reason and mutee
+        let mutee =
+          message.mentions.members.first() ||
+          message.guild.members.get(args[0]);
+        if (!mutee)
+          return message.channel.send("Please supply a user to be muted!");
+
+        let reason = args.slice(2).join(" ");
+        if (!reason) reason = "No reason given";
+
+        //define mute role and if the mute role doesnt exist then create one
+        let muterole = message.guild.roles.find(r => r.name === "Muted");
+        if (!muterole) {
+          try {
+            muterole = await message.guild.createRole({
+              name: "Muted",
+              color: "#514f48",
+              permissions: []
+            });
+            message.guild.channels.forEach(async (channel, id) => {
+              await channel.overwritePermissions(muterole, {
+                SEND_MESSAGES: false,
+                ADD_REACTIONS: false,
+                SEND_TTS_MESSAGES: false,
+                ATTACH_FILES: false,
+                SPEAK: false
+              });
+            });
+          } catch (e) {
+            console.log(e.stack);
+          }
+        }
+
+        //add role to the mentioned user and also send the user a dm explaing where and why they were muted
+        mutee.addRole(muterole.id).then(() => {
+          message.delete();
+          mutee
+            .send(
+              `Hello, you have been muted in ${message.guild.name} for: ${reason}`
+            )
+            .catch(err => console.log(err))
+            .then(msg => msg.delete(15000));
+          message.channel
+            .send(`${mutee.user.username} was successfully muted.`)
+            .then(msg => msg.delete(15000));
+        });
+
+        //send an embed to the modlogs channel
+        let muteembed = new Discord.RichEmbed()
+          .setAuthor(`${message.guild.name}`, message.guild.iconURL)
+          .addField("Moderation:", "mute")
+          .addField("Mutee:", mutee.user.username)
+          .addField("Moderator:", message.author.username)
+          .addField("Reason:", reason)
+          .addField("Date:", message.createdAt.toLocaleString());
+
+        let sChannel = message.guild.channels.find(c => c.name === "mute-logs");
+        sChannel.send(muteembed);
+      }
+      break;
+
+    case "unmute":
+      if (message.content.startsWith(PREFIX + "unmute")) {
+        if (
+          !message.member.hasPermission("MANAGE_ROLES") ||
+          !message.guild.owner
+        )
+          return message.channel.send(
+            "You dont have permission to use this command."
+          );
+
+        if (!message.guild.me.hasPermission(["MANAGE_ROLES", "ADMINISTRATOR"]))
+          return message.channel.send("I don't have permission to add roles!");
+
+        //define the reason and unmutee
+        let mutee =
+          message.mentions.members.first() ||
+          message.guild.members.get(args[0]);
+        if (!mutee)
+          return message.channel.send("Please supply a user to be muted!");
+
+        let reason = args.slice(2).join(" ");
+        if (!reason) reason = "No reason given";
+
+        //define mute role and if the mute role doesnt exist then send a message
+        let muterole = message.guild.roles.find(r => r.name === "Muted");
+        if (!muterole)
+          return message.channel.send("There is no mute role to remove!");
+
+        //remove role to the mentioned user and also send the user a dm explaing where and why they were unmuted
+        mutee.removeRole(muterole.id).then(() => {
+          message.delete();
+          mutee
+            .send(
+              `Hello, you have been unmuted in ${message.guild.name} for: ${reason}`
+            )
+            .catch(err => console.log(err))
+            .then(msg => msg.delete(15000));
+          message.channel
+            .send(`${mutee.user.username} was unmuted!`)
+            .then(msg => msg.delete(15000));
+        });
+
+        //send an embed to the modlogs channel
+        let unmuteembed = new Discord.RichEmbed()
+          .setColor("RED")
+          .setAuthor(`${message.guild.name} Modlogs`, message.guild.iconURL)
+          .addField("Moderation:", "unmute")
+          .addField("Mutee:", mutee.user.username)
+          .addField("Moderator:", message.author.username)
+          .addField("Reason:", reason)
+          .addField("Date:", message.createdAt.toLocaleString());
+
+        let sChannel = message.guild.channels.find(c => c.name === "mute-logs");
+        sChannel.send(unmuteembed);
+      }
+break;
+
+
+
+
+
+
+
+
+
+
+
+
+const Discord = require("discord.js");
+const { Util } = require("discord.js");
+const bot = new Discord.Client();
+const client = new Discord.Client();
+const ms = require("ms");
+const superagent = require("superagent");
+const ytdl = require("ytdl-core");
+const ytdlDiscord = require("ytdl-core-discord");
+const express = require("express");
+const app = express();
+const errors = require("./errors.js");
+const colours = require("./colours.json");
+const randomPuppy = require("random-puppy");
+const moment = require("moment");
+const fs = require("fs");
+const Enmap = require("enmap");
+const config = require("./config.json");
+const PREFIX = ">";
+
+app.get("/", (request, response) => {
+  console.log(Date.now() + " Ping Received");
+  response.sendStatus(200);
+});
+app.listen(process.env.PORT);
+setInterval(() => {
+  app.get(`http://${process.env.PROJECT_DOMAIN}.glitch.me/`);
+}, 280000);
+
+bot.on("ready", async => {
+  console.log("This bot is online!");
+
+  let tt = [
+    { name: `Brian Mendoza`, type: "LISTENING" },
+    {
+      name: `users needing help`,
+      type: "WATCHING"
+    },
+    { name: `@Idiotical Chris`, type: "PLAYING" }
+  ];
+
+  function status() {
+    let rs = tt[Math.floor(Math.random() * tt.length)];
+    bot.user.setPresence({ game: rs });
+  }
+  status();
+  setInterval(() => status(), 60000);
+});
+
+bot.on("message", async (message) => {
+  let args = message.content.substring(PREFIX.length).split(" ");
+  
+  
+  if (message.content.startsWith('>')) {
+  message.channel.send('Discontinued... Reason: Developer quitting discord') 
+       .then(message => message.delete(10000));
+     
+  }
+  
+  
+  if (message.content === '<@776776341986344990>') {
+  message.channel.send('The prefix is `>`.');
+    }
+ switch (args[0]) {
+     
+     }});
+
+bot.login(process.env.token);

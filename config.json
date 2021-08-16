@@ -1,0 +1,9 @@
+{
+  "name": "PINOY",
+  "version": "1.0.1",
+  "description": "PINOY bot is coded and is not opensource, It's a private customized bot of BNF",
+  "main": "index.js",
+  "author": "SLNLS7ER",
+  "prefix": "."
+  
+}
